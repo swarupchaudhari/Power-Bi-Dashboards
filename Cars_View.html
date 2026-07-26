@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Car's View — Power BI Dashboard Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1B2430;
+    --navy-2:#151d27;
+    --steel:#2E3A46;
+    --steel-2:#3a4753;
+    --orange:#E8622C;
+    --orange-dim: rgba(232,98,44,.18);
+    --gold:#C9A227;
+    --fog:#F4F5F7;
+    --fog-dim: rgba(244,245,247,.62);
+    --crimson:#C0392B;
+    --sky:#5B8FB9;
+    --teal:#3FA796;
+    --line: rgba(244,245,247,.09);
+    --radius: 10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--navy);
+    color:var(--fog);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--steel-2);border-radius:8px;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:18px 28px;
+    background:linear-gradient(180deg, var(--navy-2), var(--navy));
+    border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:50;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand .mark{
+    width:38px;height:38px;border-radius:8px;
+    background:conic-gradient(from 220deg, var(--orange), var(--gold), var(--orange));
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Rajdhani',sans-serif; font-weight:700; color:var(--navy); font-size:18px;
+  }
+  .brand h1{
+    font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:.06em;
+    font-size:22px; margin:0; text-transform:uppercase;
+  }
+  .brand h1 span{color:var(--orange);}
+  .brand p{margin:0; font-size:11.5px; color:var(--fog-dim); letter-spacing:.03em;}
+  .badge-portfolio{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--gold);
+    border:1px solid rgba(201,162,39,.4); padding:5px 10px; border-radius:20px;
+    letter-spacing:.04em;
+  }
+
+  /* ---------- KPI strip ---------- */
+  .kpis{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:1px;
+    background:var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .kpi{
+    background:var(--navy-2); padding:16px 20px;
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .kpi .label{font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--fog-dim);}
+  .kpi .value{font-family:'Rajdhani',sans-serif; font-weight:700; font-size:28px; color:var(--fog); font-variant-numeric:tabular-nums;}
+  .kpi .value em{color:var(--orange); font-style:normal;}
+  .kpi.modified .value{color:var(--crimson);}
+
+  /* ---------- Layout ---------- */
+  .layout{
+    display:grid;
+    grid-template-columns:280px 1fr;
+    gap:0;
+    align-items:start;
+  }
+  .rail{
+    background:var(--navy-2);
+    border-right:1px solid var(--line);
+    padding:20px 16px 40px;
+    position:sticky; top:126px;
+    height:calc(100vh - 126px);
+    overflow-y:auto;
+  }
+  .rail h3{
+    font-family:'Rajdhani',sans-serif; font-size:13px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--fog-dim); margin:22px 0 10px; font-weight:600;
+  }
+  .rail h3:first-child{margin-top:0;}
+  .rail h3 .hint{
+    display:block; font-size:9.5px; letter-spacing:.02em; text-transform:none; color:var(--orange);
+    margin-top:2px; font-family:'Inter',sans-serif;
+  }
+
+  /* Image chiclet slicer — mirrors a Power BI Chiclet Slicer visual */
+  .chiclets{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .chiclet{
+    position:relative; border-radius:8px; overflow:hidden; cursor:pointer;
+    border:1px solid var(--line); background:var(--steel);
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .chiclet img{ width:100%; height:52px; object-fit:cover; display:block; opacity:.78; }
+  .chiclet .cap{
+    position:absolute; left:0; right:0; bottom:0; padding:4px 6px;
+    background:linear-gradient(180deg, transparent, rgba(0,0,0,.75));
+    font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; letter-spacing:.02em;
+  }
+  .chiclet .bar{ position:absolute; left:0; right:0; bottom:0; height:3px; background:transparent; transition:background .15s ease; }
+  .chiclet:hover{ transform:translateY(-1px); }
+  .chiclet.active{ border-color:var(--orange); }
+  .chiclet.active .bar{ background:var(--orange); }
+  .chiclet.active img{ opacity:1; }
+
+  /* Brand chiclets (text-based) */
+  .brand-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .brand-chip{
+    font-family:'Inter',sans-serif; font-size:11.5px; padding:5px 10px; border-radius:16px;
+    background:var(--steel); border:1px solid var(--line); cursor:pointer; color:var(--fog-dim);
+    transition:all .12s ease;
+  }
+  .brand-chip.active{ background:var(--orange-dim); border-color:var(--orange); color:var(--fog); }
+
+  .btn-group{ display:flex; flex-wrap:wrap; gap:6px; }
+  .btn-group button{
+    font-family:'Inter',sans-serif; font-size:11.5px; padding:6px 11px; border-radius:6px;
+    background:var(--steel); border:1px solid var(--line); color:var(--fog-dim); cursor:pointer;
+  }
+  .btn-group button.active{ background:var(--orange); border-color:var(--orange); color:var(--navy); font-weight:600; }
+
+  .price-range{ padding:4px 2px 0; }
+  .price-range input[type=range]{ width:100%; accent-color:var(--orange); }
+  .price-range .val{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--gold); margin-top:4px; }
+
+  .toggle-row{ display:flex; align-items:center; justify-content:space-between; }
+  .switch{ position:relative; width:38px; height:20px; background:var(--steel); border-radius:20px; cursor:pointer; border:1px solid var(--line); }
+  .switch .dot{ position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:var(--fog-dim); transition:all .15s ease; }
+  .switch.on{ background:rgba(192,57,43,.35); border-color:var(--crimson); }
+  .switch.on .dot{ left:20px; background:var(--crimson); }
+
+  .reset-btn{
+    margin-top:20px; width:100%; padding:8px; border-radius:6px; background:transparent;
+    border:1px dashed var(--fog-dim); color:var(--fog-dim); font-size:11.5px; cursor:pointer;
+  }
+  .reset-btn:hover{ border-color:var(--orange); color:var(--orange); }
+
+  /* ---------- Main gallery ---------- */
+  .main{ padding:22px 26px 60px; }
+  .main-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;}
+  .main-head h2{ font-family:'Rajdhani',sans-serif; font-size:19px; margin:0; letter-spacing:.02em; }
+  .main-head .count{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--fog-dim); }
+
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:16px; }
+  .card{
+    background:var(--steel); border:1px solid var(--line); border-radius:var(--radius);
+    overflow:hidden; display:flex; flex-direction:column; position:relative;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .card:hover{ transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,0,0,.35); }
+  .card .imgwrap{ position:relative; }
+  .card img{ width:100%; height:140px; object-fit:cover; display:block; }
+  .card .cat-tag{
+    position:absolute; top:8px; left:8px; font-size:9.5px; text-transform:uppercase; letter-spacing:.06em;
+    padding:3px 7px; border-radius:4px; font-weight:600; font-family:'Inter',sans-serif; color:#0e131a;
+  }
+  .card .mod-ribbon{
+    position:absolute; top:8px; right:8px; background:var(--crimson); color:#fff;
+    font-size:9px; font-weight:700; padding:3px 7px; border-radius:4px; letter-spacing:.04em;
+    font-family:'Inter',sans-serif;
+  }
+  .card .body{ padding:12px 13px 14px; display:flex; flex-direction:column; gap:7px; flex:1; }
+  .card .model{ font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; line-height:1.15; }
+  .card .brand{ font-size:11px; color:var(--fog-dim); margin-top:-4px; }
+  .card .price-row{ display:flex; align-items:center; justify-content:space-between; }
+  .card .price{ font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--orange); font-size:15px; }
+  .card .rating{ font-size:11.5px; color:var(--gold); font-family:'JetBrains Mono',monospace; }
+  .card .specs{ display:flex; gap:8px; font-size:10.5px; color:var(--fog-dim); flex-wrap:wrap; }
+  .card .specs span{ background:rgba(244,245,247,.06); padding:2px 6px; border-radius:4px; }
+  .card .feats{ display:flex; flex-wrap:wrap; gap:5px; margin-top:2px; }
+  .card .feat{ font-size:9.5px; padding:2px 6px; border-radius:10px; background:rgba(244,245,247,.07); color:var(--fog-dim); }
+  .card .feat.more{ color:var(--orange); background:transparent; padding-left:2px; }
+
+  .empty{
+    grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--fog-dim);
+    font-family:'Rajdhani',sans-serif; font-size:16px;
+  }
+
+  .footnote{
+    margin-top:28px; padding:14px 16px; border:1px dashed var(--line); border-radius:8px;
+    font-size:11.5px; color:var(--fog-dim); line-height:1.6;
+  }
+  .footnote b{ color:var(--fog); }
+
+  @media (max-width:820px){
+    .layout{ grid-template-columns:1fr; }
+    .rail{ position:relative; top:0; height:auto; border-right:none; border-bottom:1px solid var(--line); }
+    .kpis{ grid-template-columns:repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="mark">CV</div>
+    <div>
+      <h1>Car's <span>View</span></h1>
+      <p>Portfolio Power BI Dashboard Preview — data-driven car explorer</p>
+    </div>
+  </div>
+  <div class="badge-portfolio">PORTFOLIO PROJECT · LIVE PREVIEW</div>
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="layout">
+  <aside class="rail">
+    <h3>Category<span class="hint">Image slicer</span></h3>
+    <div class="chiclets" id="categoryChiclets"></div>
+
+    <h3>Brand</h3>
+    <div class="brand-chips" id="brandChips"></div>
+
+    <h3>Fuel Type</h3>
+    <div class="btn-group" id="fuelGroup"></div>
+
+    <h3>Transmission</h3>
+    <div class="btn-group" id="transGroup"></div>
+
+    <h3>Max Price (₹ Lakh)</h3>
+    <div class="price-range">
+      <input type="range" id="priceRange" min="5" max="50" value="50" step="1">
+      <div class="val" id="priceVal">Up to ₹50.0 L</div>
+    </div>
+
+    <h3>Modified / Custom Only</h3>
+    <div class="toggle-row">
+      <span style="font-size:12px;color:var(--fog-dim)">Show only mods</span>
+      <div class="switch" id="modToggle"><div class="dot"></div></div>
+    </div>
+
+    <button class="reset-btn" id="resetBtn">Reset all filters</button>
+  </aside>
+
+  <main class="main">
+    <div class="main-head">
+      <h2>Car Gallery</h2>
+      <div class="count" id="resultCount"></div>
+    </div>
+    <div class="grid" id="grid"></div>
+
+    <div class="footnote">
+      <b>How this maps to Power BI:</b> the Category tiles above emulate a <b>Chiclet Slicer</b> custom visual (image mode) — Power BI's native slicer doesn't render images, so Chiclet Slicer or a bookmark-driven button set is the standard technique. The gallery grid is a <b>Table/List visual</b> with the ImageURL column set to Data Category → Image URL. Brand/Fuel/Transmission use standard slicers; Price uses a slicer set to "Between".
+    </div>
+  </main>
+</div>
+
+<script>
+const CARS = [{"id": "CAR001", "brand": "Maruti Suzuki", "model": "Swift", "category": "Hatchback", "price": 6.5, "fuel": "Petrol", "trans": "Manual", "seats": 5, "mileage": 22.4, "cc": 1197, "rating": 4.4, "year": 2024, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Maruti+Suzuki+Swift&font=roboto", "features": ["Sunroof", "Keyless Entry", "Automatic Climate Control", "Hill Hold Control", "Touchscreen Infotainment"]}, {"id": "CAR002", "brand": "Hyundai", "model": "i20", "category": "Hatchback", "price": 7.7, "fuel": "Petrol", "trans": "Manual", "seats": 5, "mileage": 20.3, "cc": 1197, "rating": 4.3, "year": 2023, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Hyundai+i20&font=roboto", "features": ["Rear AC Vents", "6 Airbags", "Hill Hold Control", "LED Headlamps", "ABS with EBD"]}, {"id": "CAR003", "brand": "Tata", "model": "Altroz", "category": "Hatchback", "price": 6.8, "fuel": "Diesel", "trans": "Manual", "seats": 5, "mileage": 24.9, "cc": 1497, "rating": 4.3, "year": 2023, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Tata+Altroz&font=roboto", "features": ["6 Airbags", "Alloy Wheels", "Automatic Climate Control", "Push Button Start", "Sunroof"]}, {"id": "CAR004", "brand": "Maruti Suzuki", "model": "Baleno", "category": "Hatchback", "price": 6.6, "fuel": "Petrol", "trans": "Automatic", "seats": 5, "mileage": 22.9, "cc": 1197, "rating": 4.2, "year": 2024, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Maruti+Suzuki+Baleno&font=roboto", "features": ["360-Degree Camera", "Rear AC Vents", "LED Headlamps", "Automatic Climate Control", "Ambient Lighting", "Keyless Entry"]}, {"id": "CAR005", "brand": "Toyota", "model": "Glanza", "category": "Hatchback", "price": 7.2, "fuel": "Petrol", "trans": "Automatic", "seats": 5, "mileage": 22.3, "cc": 1197, "rating": 4.2, "year": 2023, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Toyota+Glanza&font=roboto", "features": ["Rear Parking Camera", "LED Headlamps", "Wireless Charging", "Keyless Entry", "Touchscreen Infotainment"]}, {"id": "CAR006", "brand": "Volkswagen", "model": "Polo", "category": "Hatchback", "price": 7.4, "fuel": "Petrol", "trans": "Manual", "seats": 5, "mileage": 18.3, "cc": 999, "rating": 4.5, "year": 2022, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Volkswagen+Polo&font=roboto", "features": ["Wireless Charging", "Cruise Control", "6 Airbags", "Panoramic Sunroof", "Traction Control", "ADAS (Level 2)"]}, {"id": "CAR007", "brand": "Hyundai", "model": "Grand i10 Nios", "category": "Hatchback", "price": 6.1, "fuel": "Petrol", "trans": "Manual", "seats": 5, "mileage": 20.7, "cc": 1197, "rating": 4.1, "year": 2023, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Hyundai+Grand+i10+Nios&font=roboto", "features": ["Traction Control", "Keyless Entry", "ABS with EBD", "Ambient Lighting", "Cruise Control", "Panoramic Sunroof", "Hill Hold Control"]}, {"id": "CAR008", "brand": "Tata", "model": "Tiago", "category": "Hatchback", "price": 5.7, "fuel": "Petrol", "trans": "Manual", "seats": 5, "mileage": 20, "cc": 1199, "rating": 4.2, "year": 2024, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Tata+Tiago&font=roboto", "features": ["360-Degree Camera", "Traction Control", "ADAS (Level 2)", "Alloy Wheels", "6 Airbags", "ABS with EBD", "Wireless Charging"]}, {"id": "CAR009", "brand": "Maruti Suzuki", "model": "Celerio", "category": "Hatchback", "price": 5.5, "fuel": "Petrol", "trans": "Automatic", "seats": 5, "mileage": 26.7, "cc": 998, "rating": 4.1, "year": 2023, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Maruti+Suzuki+Celerio&font=roboto", "features": ["Ventilated Seats", "6 Airbags", "Automatic Climate Control", "Cruise Control", "Panoramic Sunroof", "Keyless Entry"]}, {"id": "CAR010", "brand": "Honda", "model": "Jazz", "category": "Hatchback", "price": 8, "fuel": "Petrol", "trans": "Manual", "seats": 5, "mileage": 17, "cc": 1199, "rating": 4, "year": 2020, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Honda+Jazz&font=roboto", "features": ["360-Degree Camera", "ADAS (Level 2)", "Rear Parking Camera", "Traction Control", "Rear AC Vents", "Alloy Wheels", "Wireless Charging", "Touchscreen Infotainment"]}, {"id": "CAR011", "brand": "Honda", "model": "City", "category": "Sedan", "price": 11.9, "fuel": "Petrol", "trans": "Automatic", "seats": 5, "mileage": 18.4, "cc": 1498, "rating": 4.5, "year": 2024, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Honda+City&font=roboto", "features": ["Traction Control", "Rear Parking Camera", "Rear AC Vents", "Automatic Climate Control", "360-Degree Camera"]}, {"id": "CAR012", "brand": "Hyundai", "model": "Verna", "category": "Sedan", "price": 11.2, "fuel": "Petrol", "trans": "Automatic", "seats": 5, "mileage": 20.6, "cc": 1497, "rating": 4.4, "year": 2023, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Hyundai+Verna&font=roboto", "features": ["Panoramic Sunroof", "Keyless Entry", "Rear AC Vents", "Automatic Climate Control", "Wireless Charging", "ABS with EBD", "Cruise Control", "LED Headlamps"]}, {"id": "CAR013", "brand": "Skoda", "model": "Slavia", "category": "Sedan", "price": 11.6, "fuel": "Petrol", "trans": "Manual", "seats": 5, "mileage": 18.7, "cc": 999, "rating": 4.4, "year": 2023, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Skoda+Slavia&font=roboto", "features": ["Wireless Charging", "Panoramic Sunroof", "Keyless Entry", "6 Airbags", "Alloy Wheels"]}, {"id": "CAR014", "brand": "Volkswagen", "model": "Virtus", "category": "Sedan", "price": 12, "fuel": "Petrol", "trans": "Automatic", "seats": 5, "mileage": 19.4, "cc": 999, "rating": 4.5, "year": 2023, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Volkswagen+Virtus&font=roboto", "features": ["Alloy Wheels", "Connected Car Tech", "Panoramic Sunroof", "Ambient Lighting", "Touchscreen Infotainment", "Keyless Entry", "6 Airbags"]}, {"id": "CAR015", "brand": "Maruti Suzuki", "model": "Ciaz", "category": "Sedan", "price": 9.9, "fuel": "Petrol", "trans": "Manual", "seats": 5, "mileage": 20.4, "cc": 1462, "rating": 4.1, "year": 2022, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Maruti+Suzuki+Ciaz&font=roboto", "features": ["Rear AC Vents", "360-Degree Camera", "Keyless Entry", "LED Headlamps", "Panoramic Sunroof", "ADAS (Level 2)"]}, {"id": "CAR016", "brand": "Toyota", "model": "Camry", "category": "Sedan", "price": 46.2, "fuel": "Hybrid", "trans": "Automatic", "seats": 5, "mileage": 22.4, "cc": 2487, "rating": 4.6, "year": 2023, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Toyota+Camry&font=roboto", "features": ["Touchscreen Infotainment", "Push Button Start", "Connected Car Tech", "6 Airbags", "ABS with EBD", "Cruise Control"]}, {"id": "CAR017", "brand": "Honda", "model": "Amaze", "category": "Sedan", "price": 8, "fuel": "Petrol", "trans": "Manual", "seats": 5, "mileage": 19.5, "cc": 1199, "rating": 4.2, "year": 2024, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Honda+Amaze&font=roboto", "features": ["360-Degree Camera", "Rear Parking Camera", "LED Headlamps", "6 Airbags", "Panoramic Sunroof", "Push Button Start"]}, {"id": "CAR018", "brand": "Hyundai", "model": "Aura", "category": "Sedan", "price": 7.2, "fuel": "Diesel", "trans": "Manual", "seats": 5, "mileage": 25.4, "cc": 1186, "rating": 4.1, "year": 2023, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Hyundai+Aura&font=roboto", "features": ["Push Button Start", "Keyless Entry", "Rear AC Vents", "Sunroof", "Cruise Control", "Traction Control", "Panoramic Sunroof", "Wireless Charging"]}, {"id": "CAR019", "brand": "Skoda", "model": "Superb", "category": "Sedan", "price": 32, "fuel": "Petrol", "trans": "Automatic", "seats": 5, "mileage": 14.6, "cc": 1984, "rating": 4.5, "year": 2023, "modified": "No", "image": "https://placehold.co/480x300/1b2430/ffffff?text=Skoda+Superb&font=roboto", "features": ["Cruise Control", "Ventilated Seats", "LED Headlamps", "Rear Parking Camera", "Ambient Lighting", "Sunroof", "ADAS (Level 2)"]}, {"id": "CAR020", "brand": "Tata", "model": "Tigor", "category": "Sedan", "price": 6.6, "fuel": "Petrol", "trans": "Manual", "seats": 5, "mileage": 20, "cc": 1199, "rat
